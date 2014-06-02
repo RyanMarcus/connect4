@@ -271,7 +271,7 @@ int heuristicForState(GameState* gs, int player, int other) {
 	if (term_stat == player)
 		return 1000;
 
-	if (term_stat != EMPTY)
+	if (term_stat)
 		return -1000;
 
 	
