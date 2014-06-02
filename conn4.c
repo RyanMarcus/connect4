@@ -305,7 +305,7 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 			continue;
 		}
 		
-		possibleMoves[validMoves] = stateForMove(node->gs, possibleMove, node->player);
+		possibleMoves[validMoves] = stateForMove(node->gs, possibleMove, (node->turn ? node->player : node->other_player));
 		validMoves++;
 	}
 
@@ -343,13 +343,13 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 
 		if (!(node->turn)) {
 			// min node
-			if (best_weight < child_weight) {
+			if (best_weight > child_weight) {
 				best_weight = child_weight;
 				node->best_move = move;
 			}
 		} else {
 			// max node
-			if (best_weight > child_weight) {
+			if (best_weight < child_weight) {
 				best_weight = child_weight;
 				node->best_move = move;
 			}
