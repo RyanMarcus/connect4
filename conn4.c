@@ -41,11 +41,12 @@ void drop(GameState* gs, int column, int player) {
 	for (int i = 0; i < gs->height; i++) {
 		if (at(gs, column, i) == EMPTY) {
 			gs->board[column * gs->width + i] = player;
+			gs->last_move = column;
 			return;
 		}
 	}
 
-	gs->last_move = column;
+
 }
 
 int checkAt(GameState* gs, int x, int y) {
