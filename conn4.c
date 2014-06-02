@@ -210,7 +210,7 @@ void printGameState(GameState* gs) {
 
 	printf("\n");
 	
-	for (int y = 0; y < gs->height; y++) {
+	for (int y = gs->height - 1; y >= 0 ; y--) {
 		for (int x = 0; x < gs->width; x++) {
 			int toP = at(gs, x, y);
 			if (toP == EMPTY) {
