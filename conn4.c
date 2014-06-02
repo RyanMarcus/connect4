@@ -334,7 +334,7 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 			node->beta = (node->beta < child_weight ? node->beta : child_weight);
 		} else {
 			// max node
-			if (child_weight <= node->beta) {
+			if (child_weight >= node->beta) {
 				// MIN ensures we will never go here
 				return child_weight;
 			}
