@@ -345,13 +345,13 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 			// min node
 			if (best_weight > child_weight) {
 				best_weight = child_weight;
-				node->best_move = move;
+				node->best_move = child->gs->last_move;
 			}
 		} else {
 			// max node
 			if (best_weight < child_weight) {
 				best_weight = child_weight;
-				node->best_move = move;
+				node->best_move = child->gs->last_move;
 			}
 		}
 
@@ -394,6 +394,7 @@ int main(int argc, char** argv) {
 	while (1) {
 		GameTreeNode* n = newGameTreeNode(gs, 1, 2, 1, INT_MIN, INT_MAX);
 		int move = getBestMove(n, 5);
+		printf("Move: %d\n", move);
 		drop(gs, move, 1);
 		free(n);
 
@@ -403,6 +404,7 @@ int main(int argc, char** argv) {
 
 		n = newGameTreeNode(gs, 2, 1, 1, INT_MIN, INT_MAX);
 		move = getBestMove(n, 5);
+		printf("Move: %d\n", move);
 		drop(gs, move, 2);
 		free(n);
 
