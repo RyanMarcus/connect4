@@ -39,8 +39,10 @@ int at(GameState* gs, int x, int y) {
 
 void drop(GameState* gs, int column, int player) {
 	for (int i = 0; i < gs->height; i++) {
-		if (at(gs, column, i) == EMPTY)
+		if (at(gs, column, i) == EMPTY) {
 			gs->board[column * gs->width + i] = player;
+			return;
+		}
 	}
 
 	gs->last_move = column;
@@ -194,8 +196,8 @@ int canMove(GameState* gs, int column) {
 }
 
 GameState* stateForMove(GameState* orig, int column, int player) {
-	GameState* toR = (GameState*) malloc(sizeof(GameState));
-	memcpy(orig, toR, sizeof(GameState));
+	GameState* toR = newGameState(orig->width, orig->height);
+	memcpy(orig->board, toR->board, sizeof(int) * orig->width * orig->height);
 	drop(toR, column, player);
 	return toR;
 }
@@ -209,7 +211,12 @@ void printGameState(GameState* gs) {
 	
 	for (int y = 0; y < gs->height; y++) {
 		for (int x = 0; x < gs->width; x++) {
-			printf("%d ", at(gs, x, y));
+			int toP = at(gs, x, y);
+			if (toP == EMPTY) {
+				printf("  ");
+			} else {
+				printf("%d ", toP);
+			}
 		}
 		printf("\n");
 	}
@@ -287,7 +294,7 @@ int desComp(void* thunk, const void* a, const void* b) {
 }
 
 int getWeight(GameTreeNode* node, int movesLeft) {
-	if (getWinner(node->gs) != EMPTY || isDraw(node->gs) || movesLeft == 0)
+	if (getWinner(node->gs) == EMPTY || isDraw(node->gs) || movesLeft == 0)
 		return heuristicForState(node->gs, node->player, node->other_player);
 
 	GameState** possibleMoves = (GameState**) malloc(sizeof(GameState*) * node->gs->width);
