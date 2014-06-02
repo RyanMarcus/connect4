@@ -226,7 +226,7 @@ void printGameState(GameState* gs) {
 		printf("%d ", i);
 	}
 
-	printf("\n");
+	printf("\n\n");
 }
 
 long hashGameState(GameState* gs) {
