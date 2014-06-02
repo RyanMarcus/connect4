@@ -198,7 +198,7 @@ int canMove(GameState* gs, int column) {
 
 GameState* stateForMove(GameState* orig, int column, int player) {
 	GameState* toR = newGameState(orig->width, orig->height);
-	memcpy(orig->board, toR->board, sizeof(int) * orig->width * orig->height);
+	memcpy(toR->board, orig->board, sizeof(int) * orig->width * orig->height);
 	drop(toR, column, player);
 	return toR;
 }
