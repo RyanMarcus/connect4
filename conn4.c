@@ -31,7 +31,7 @@ int at(GameState* gs, int x, int y) {
 	if (x < 0 || y < 0)
 		return OFF_BOARD;
 
-	if (x > gs->width || y > gs->height)
+	if (x >= gs->width || y >= gs->height)
 		return OFF_BOARD;
 
 	return gs->board[x * gs->width + y];
@@ -281,15 +281,15 @@ int heuristicForState(GameState* gs, int player, int other) {
 
 int ascComp(void* thunk, const void* a, const void* b) {
 	GameTreeNode* node = (GameTreeNode*) thunk;
-	return heuristicForState((GameState*) a, node->player, node->other_player) -
-		heuristicForState((GameState*) b, node->player, node->other_player);
+	return heuristicForState(*(GameState**) a, node->player, node->other_player) -
+		heuristicForState(*(GameState**) b, node->player, node->other_player);
 	
 }
 
 int desComp(void* thunk, const void* a, const void* b) {
 	GameTreeNode* node = (GameTreeNode*) thunk;
-	return heuristicForState((GameState*) b, node->player, node->other_player) -
-		heuristicForState((GameState*) a, node->player, node->other_player);
+	return heuristicForState(*(GameState**) b, node->player, node->other_player) -
+		heuristicForState(*(GameState**) a, node->player, node->other_player);
 	
 }
 
@@ -310,9 +310,9 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 
 	// order possibleMoves by the heuristic
 	if (node->turn) {
-		qsort_r(possibleMoves, validMoves, sizeof(GameState), node, ascComp); 
+		qsort_r(possibleMoves, validMoves, sizeof(GameState*), node, ascComp); 
 	} else {
-		qsort_r(possibleMoves, validMoves, sizeof(GameState), node, desComp); 
+		qsort_r(possibleMoves, validMoves, sizeof(GameState*), node, desComp); 
 	}
 
 	int best_weight = (node->turn ? INT_MIN : INT_MAX);
@@ -340,7 +340,7 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 			node->alpha = (node->alpha > child_weight ? node->alpha : child_weight);
 		}
 
-		if (node->turn) {
+		if (!(node->turn)) {
 			// min node
 			if (best_weight < child_weight) {
 				best_weight = child_weight;
