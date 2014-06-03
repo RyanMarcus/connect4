@@ -34,13 +34,13 @@ int at(GameState* gs, int x, int y) {
 	if (x >= gs->width || y >= gs->height)
 		return OFF_BOARD;
 
-	return gs->board[x * gs->width + y];
+	return gs->board[x * gs->height + y];
 }
 
 void drop(GameState* gs, int column, int player) {
 	for (int i = 0; i < gs->height; i++) {
 		if (at(gs, column, i) == EMPTY) {
-			gs->board[column * gs->width + i] = player;
+			gs->board[column * gs->height + i] = player;
 			gs->last_move = column;
 			return;
 		}
@@ -295,6 +295,7 @@ int desComp(void* thunk, const void* a, const void* b) {
 }
 
 int getWeight(GameTreeNode* node, int movesLeft) {
+	int toR;
 	if (getWinner(node->gs) == EMPTY || isDraw(node->gs) || movesLeft == 0)
 		return heuristicForState(node->gs, node->player, node->other_player);
 
@@ -323,20 +324,24 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 		GameTreeNode* child = newGameTreeNode(possibleMoves[move], node->player, node->other_player, !(node->turn),
 						      node->alpha, node->beta);
 		int child_weight = getWeight(child, movesLeft - 1);
+		int child_last_move = child->gs->last_move;
+		free(child);
 
 		// alpha-beta pruning
 		if (!node->turn) {
 			// min node
 			if (child_weight <= node->alpha) {
 				// MAX ensures we will never go here
-				return child_weight;
+				toR = child_weight;
+				goto done;
 			}
 			node->beta = (node->beta < child_weight ? node->beta : child_weight);
 		} else {
 			// max node
 			if (child_weight >= node->beta) {
 				// MIN ensures we will never go here
-				return child_weight;
+				toR = child_weight;
+				goto done;
 			}
 			node->alpha = (node->alpha > child_weight ? node->alpha : child_weight);
 		}
@@ -345,23 +350,27 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 			// min node
 			if (best_weight > child_weight) {
 				best_weight = child_weight;
-				node->best_move = child->gs->last_move;
+				node->best_move = child_last_move;
 			}
 		} else {
 			// max node
 			if (best_weight < child_weight) {
 				best_weight = child_weight;
-				node->best_move = child->gs->last_move;
+				node->best_move = child_last_move;
 			}
 		}
 
-		free(possibleMoves[move]);
-		free(child);
 		
+	}
+	toR = best_weight;
+done:
+	for (int i = 0; i < validMoves; i++) {
+		free(possibleMoves[i]->board);
+		free(possibleMoves[i]);
 	}
 
 	free(possibleMoves);
-	return best_weight;
+	return toR;
 }
 
 int getBestMove(GameTreeNode* node, int movesLeft) {
@@ -390,11 +399,11 @@ void checkWin(GameState* gs) {
 }
 
 int main(int argc, char** argv) {
-	GameState* gs = newGameState(4, 4);
+	GameState* gs = newGameState(7, 6);
 	while (1) {
 		GameTreeNode* n = newGameTreeNode(gs, 1, 2, 1, INT_MIN, INT_MAX);
 		int move = getBestMove(n, 5);
-		printf("Move: %d\n", move);
+		printf("Computer 1 move: %d\n", move);
 		drop(gs, move, 1);
 		free(n);
 
@@ -404,15 +413,18 @@ int main(int argc, char** argv) {
 
 		n = newGameTreeNode(gs, 2, 1, 1, INT_MIN, INT_MAX);
 		move = getBestMove(n, 5);
-		printf("Move: %d\n", move);
+		printf("Computer 2 move: %d\n", move);
 		drop(gs, move, 2);
 		free(n);
+
 
 		printGameState(gs);
 
 		checkWin(gs);
-		
 	}
+
+	free(gs->board);
+	free(gs);
 
 	return 0;
 }

@@ -306,7 +306,7 @@ def hvc():
             g = human_move(g)
 
 def cvc():
-    g = GameState(7, 6)
+    g = GameState(4, 4)
     while True:
         g = computer_move(g, player="1", other="2", moves=7)
         print(g)
