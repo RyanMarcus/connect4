@@ -1,0 +1,30 @@
+.conn4 {
+    width: 465px;
+}
+
+.conn4 .c4table {
+    clear: both;
+    width: 100%;
+}
+
+.conn4 .c4table .player1 {
+    background-color: #FF0000;
+}
+
+.conn4 .c4table .player2 {
+    background-color: #000000;
+}
+
+
+.conn4 .info {
+    float:  left;
+}
+.conn4 .thinking {
+    float: right;
+}
+
+.conn4 .ai {
+    margin: 10px;
+}
+
+

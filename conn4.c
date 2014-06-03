@@ -5,12 +5,18 @@
 
 #define OFF_BOARD -2
 #define EMPTY -1
+#define LOOK_AHEAD 5
+#define TABLE_SIZE 32000
+#define TABLE_BIN_SIZE 10
 
 typedef struct {
 	int width;
 	int height;
 	int* board;
 	int last_move;
+	int weight;
+
+	int refs;
 } GameState;
 
 GameState* newGameState(int width, int height) {
@@ -18,6 +24,8 @@ GameState* newGameState(int width, int height) {
 	toR->width = width;
 	toR->height = height;
 	toR->board = (int*) malloc(sizeof(int) * width * height);
+	toR->weight = 0;
+	toR->refs = 1;
 
 	for (int i = 0; i < width * height; i++) {
 		toR->board[i] = EMPTY;
@@ -26,6 +34,17 @@ GameState* newGameState(int width, int height) {
 	return toR;
 }
 
+void freeGameState(GameState* gs) {
+	gs->refs--;
+	if (gs->refs <= 0) {
+		free(gs->board);
+		free(gs);
+	}
+}
+
+void retainGameState(GameState* gs) {
+	gs->refs++;
+}
 
 int at(GameState* gs, int x, int y) {
 	if (x < 0 || y < 0)
@@ -53,7 +72,7 @@ int checkAt(GameState* gs, int x, int y) {
 	// check across
 	int found = 1;
 	int curr = at(gs, x, y);
-	for (int i = 1; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		if (at(gs, x + i, y) != curr) {
 			found = 0;
 			break;
@@ -65,7 +84,7 @@ int checkAt(GameState* gs, int x, int y) {
 
 	// check down
 	found = 1;
-	for (int i = 1; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		if (at(gs, x, y + i) != curr) {
 			found = 0;
 			break;
@@ -77,7 +96,7 @@ int checkAt(GameState* gs, int x, int y) {
 
 	// check diag +/+
 	found = 1;
-	for (int i = 1; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		if (at(gs, x + i, y + i) != curr) {
 			found = 0;
 			break;
@@ -89,7 +108,7 @@ int checkAt(GameState* gs, int x, int y) {
 
 	// check diag -/+
 	found = 1;
-	for (int i = 1; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		if (at(gs, x - i, y + i) != curr) {
 			found = 0;
 			break;
@@ -102,52 +121,51 @@ int checkAt(GameState* gs, int x, int y) {
 	return 0;
 }
 
+int getIncrementForArray(int* arr, int player) {
+	int toR = 0;
+	for (int i = 0; i < 4; i++) {
+		if (arr[i] == player) {
+			toR = 1;
+			continue;
+		}
+
+		if (arr[i] != player && arr[i] != EMPTY) {
+			return 0;
+		}
+	}
+
+	return toR;
+}
+
 int countAt(GameState* gs, int x, int y, int player) {
 
 	// check across
 	int found = 0;
-	int inc = 1;
-	for (int i = 1; i < 4; i++) {
-		int curr = at(gs, x + i, y);
-		if (curr != player && curr != EMPTY) {
-			inc = 0;
-			break;
-		}
+	int buf[4];
+
+	for (int i = 0; i < 4; i++) {
+		buf[i] = at(gs, x + i, y);
 	}
-	found += inc;
+    
+	found += getIncrementForArray(buf, player);
 
 	// check down
-	inc = 1;
-	for (int i = 1; i < 4; i++) {
-		int curr = at(gs, x, y + i);
-		if (curr != player && curr != EMPTY) {
-			inc = 0;
-			break;
-		}
+	for (int i = 0; i < 4; i++) {
+		buf[i] = at(gs, x, y + i);
 	}
-	found += inc;
+	found += getIncrementForArray(buf, player);
 
 	// check diag +/+
-	inc = 1;
-	for (int i = 1; i < 4; i++) {
-		int curr = at(gs, x + i, y + i);
-		if (curr != player && curr != EMPTY) {
-			inc = 0;
-			break;
-		}
+	for (int i = 0; i < 4; i++) {
+		buf[i] = at(gs, x + i, y + i);
 	}
-	found += inc;
+	found += getIncrementForArray(buf, player);
 
 	// check diag -/+
-	inc = 1;
-	for (int i = 1; i < 4; i++) {
-		int curr = at(gs, x - i, y + i);
-		if (curr != player && curr != EMPTY) {
-			inc = 0;
-			break;
-		}
+	for (int i = 0; i < 4; i++) {
+		buf[i] = at(gs, x - i, y + i);
 	}
-	found += inc;
+	found += getIncrementForArray(buf, player);
 
 	return found;
 }
@@ -229,8 +247,8 @@ void printGameState(GameState* gs) {
 	printf("\n\n");
 }
 
-long hashGameState(GameState* gs) {
-	unsigned long hash = 14695981039346656037Lu;
+unsigned long hashGameState(GameState* gs) {
+	unsigned long long hash = 14695981039346656037Lu;
 	for (int i = 0; i < gs->width * gs->height; i++) {
 		hash ^= gs->board[i];
 		hash *= 1099511628211Lu;
@@ -238,6 +256,78 @@ long hashGameState(GameState* gs) {
 	return hash;
 }
 
+int isGameStateEqual(GameState* gs1, GameState* gs2) {
+	if (gs1->width != gs2->width || gs1->height != gs2->height)
+		return 0;
+
+	for (int i = 0; i < gs1->width * gs1->height; i++) {
+		if (gs1->board[i] == gs2->board[i])
+			continue;
+		return 0;
+	}
+
+	return 1;
+}
+
+typedef struct {
+	GameState*** bins;
+} TranspositionTable;
+
+
+TranspositionTable* newTable() {
+	TranspositionTable* toR = (TranspositionTable*) malloc(sizeof(TranspositionTable));
+	toR->bins = (GameState***) malloc(sizeof(GameState**) * TABLE_SIZE);
+	for (int i = 0; i < TABLE_SIZE; i++) {
+		toR->bins[i] = (GameState**) malloc(sizeof(GameState*) * TABLE_BIN_SIZE);
+		for (int j = 0; j < TABLE_BIN_SIZE; j++) {
+			toR->bins[i][j] = NULL;
+		}
+	}
+
+	return toR;
+}
+
+GameState* lookupInTable(TranspositionTable* t, GameState* k) {
+	int hv = hashGameState(k) % TABLE_SIZE;
+	GameState** bin = t->bins[hv];
+	for (int i = 0; i < TABLE_BIN_SIZE; i++) {
+		if (bin[i] == NULL) {
+			return NULL;
+		}
+
+		if (isGameStateEqual(k, bin[i])) {
+			return bin[i];
+		}
+	}
+	return NULL;
+}
+
+void addToTable(TranspositionTable* t, GameState* k) {
+	int hv = hashGameState(k) % TABLE_SIZE;
+	GameState** bin = t->bins[hv];
+	for (int i = 0; i < TABLE_BIN_SIZE; i++) {
+		if (bin[i] == NULL) {
+			bin[i] = k;
+			retainGameState(k);
+			return;
+		}
+	}
+
+	fprintf(stderr, "Overflow in hash bin %d, won't store GameState\n", hv);
+}
+
+void freeTranspositionTable(TranspositionTable* t) {
+	for (int i = 0; i < TABLE_SIZE; i++) {
+		for (int j = 0; j < TABLE_BIN_SIZE; j++) {
+			if (t->bins[i][j] != NULL)
+				freeGameState(t->bins[i][j]);
+		}
+		free(t->bins[i]);
+	}
+	free(t->bins);
+
+	free(t);
+}
 
 typedef struct {
 	GameState* gs;
@@ -249,9 +339,11 @@ typedef struct {
 	int beta;
 
 	int best_move;
+
+	TranspositionTable* ht;
 } GameTreeNode;
 
-GameTreeNode* newGameTreeNode(GameState* gs, int player, int other, int turn, int alpha, int beta) {
+GameTreeNode* newGameTreeNode(GameState* gs, int player, int other, int turn, int alpha, int beta, TranspositionTable* ht) {
 	GameTreeNode* toR = (GameTreeNode*) malloc(sizeof(GameTreeNode));
 	toR->gs = gs;
 	toR->player = player;
@@ -260,6 +352,7 @@ GameTreeNode* newGameTreeNode(GameState* gs, int player, int other, int turn, in
 	toR->alpha = alpha;
 	toR->beta = beta;
 	toR->best_move = -1;
+	toR->ht = ht;
 	return toR;
 }
 
@@ -280,15 +373,20 @@ int heuristicForState(GameState* gs, int player, int other) {
 }
 
 
-int ascComp(void* thunk, const void* a, const void* b) {
-	GameTreeNode* node = (GameTreeNode*) thunk;
+// using a global instead of qsort_r because of emscripten support
+
+GameTreeNode* g_node = NULL;
+
+
+int ascComp(const void* a, const void* b) {
+	GameTreeNode* node = g_node;
 	return heuristicForState(*(GameState**) a, node->player, node->other_player) -
 		heuristicForState(*(GameState**) b, node->player, node->other_player);
 	
 }
 
-int desComp(void* thunk, const void* a, const void* b) {
-	GameTreeNode* node = (GameTreeNode*) thunk;
+int desComp(const void* a, const void* b) {
+	GameTreeNode* node = g_node;
 	return heuristicForState(*(GameState**) b, node->player, node->other_player) -
 		heuristicForState(*(GameState**) a, node->player, node->other_player);
 	
@@ -296,7 +394,7 @@ int desComp(void* thunk, const void* a, const void* b) {
 
 int getWeight(GameTreeNode* node, int movesLeft) {
 	int toR;
-	if (getWinner(node->gs) == EMPTY || isDraw(node->gs) || movesLeft == 0)
+	if (getWinner(node->gs) || isDraw(node->gs) || movesLeft == 0)
 		return heuristicForState(node->gs, node->player, node->other_player);
 
 	GameState** possibleMoves = (GameState**) malloc(sizeof(GameState*) * node->gs->width);
@@ -311,21 +409,40 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 	}
 
 	// order possibleMoves by the heuristic
+	g_node = node;
 	if (node->turn) {
-		qsort_r(possibleMoves, validMoves, sizeof(GameState*), node, ascComp); 
+		// qsort_r is apparently non-standard, and won't work with emscripten. So we'll need to use a global.
+		qsort(possibleMoves, validMoves, sizeof(GameState*), ascComp); 
 	} else {
-		qsort_r(possibleMoves, validMoves, sizeof(GameState*), node, desComp); 
+		qsort(possibleMoves, validMoves, sizeof(GameState*), desComp); 
 	}
 
 	int best_weight = (node->turn ? INT_MIN : INT_MAX);
 
 	for (int move = 0; move < validMoves; move++) {
-		// TODO: hash table
-		GameTreeNode* child = newGameTreeNode(possibleMoves[move], node->player, node->other_player, !(node->turn),
-						      node->alpha, node->beta);
-		int child_weight = getWeight(child, movesLeft - 1);
-		int child_last_move = child->gs->last_move;
-		free(child);
+		// see if the game state is already in the hash table
+		GameState* inTable = lookupInTable(node->ht, possibleMoves[move]);
+		int child_weight;
+		int child_last_move;
+		if (inTable != NULL) {
+			child_weight = inTable->weight;
+			child_last_move = possibleMoves[move]->last_move;
+
+		} else {
+			GameTreeNode* child = newGameTreeNode(possibleMoves[move], node->player, node->other_player, !(node->turn),
+							      node->alpha, node->beta, node->ht);
+			child_weight = getWeight(child, movesLeft - 1);
+			child_last_move = child->gs->last_move;
+			free(child);
+		}
+
+	
+
+		possibleMoves[move]->weight = child_weight;
+		addToTable(node->ht, possibleMoves[move]);
+
+		if (movesLeft == LOOK_AHEAD)
+			printf("Move %d has weight %d\n", child_last_move, child_weight);
 
 		// alpha-beta pruning
 		if (!node->turn) {
@@ -365,8 +482,7 @@ int getWeight(GameTreeNode* node, int movesLeft) {
 	toR = best_weight;
 done:
 	for (int i = 0; i < validMoves; i++) {
-		free(possibleMoves[i]->board);
-		free(possibleMoves[i]);
+		freeGameState(possibleMoves[i]);
 	}
 
 	free(possibleMoves);
@@ -398,34 +514,71 @@ void checkWin(GameState* gs) {
 	     
 }
 
+int bestMoveForState(GameState* gs, int player, int other_player, int look_ahead) {
+	TranspositionTable* t1 = newTable();
+	GameTreeNode* n = newGameTreeNode(gs, player, other_player, 1, INT_MIN, INT_MAX, t1);
+	int move = getBestMove(n, look_ahead);
+	free(n);
+	freeTranspositionTable(t1);
+	return move;
+}
+
+// a couple of ease-of-use functions that will run a game in global state
+
+GameState* globalState;
+
+void startNewGame() {
+	globalState = newGameState(7, 6);
+}
+
+void playerMove(int move) {
+	drop(globalState, move, 1);
+}
+
+void computerMove(int look_ahead) {
+	int move = bestMoveForState(globalState, 2, 1, look_ahead);
+	drop(globalState, move, 2);
+}
+
+int isGameWon() {
+	return getWinner(globalState);
+}
+
+int isGameDraw() {
+	return isDraw(globalState);
+}
+
+int isEmpty(int x, int y) {
+	return at(globalState, x, y) == EMPTY;
+}
+
+int pieceAt(int x, int y) {
+	return at(globalState, x, y);
+}
+
+
 int main(int argc, char** argv) {
-	GameState* gs = newGameState(7, 6);
+	startNewGame();
 	while (1) {
-		GameTreeNode* n = newGameTreeNode(gs, 1, 2, 1, INT_MIN, INT_MAX);
-		int move = getBestMove(n, 5);
-		printf("Computer 1 move: %d\n", move);
-		drop(gs, move, 1);
-		free(n);
-
-		printGameState(gs);
-
-		checkWin(gs);
-
-		n = newGameTreeNode(gs, 2, 1, 1, INT_MIN, INT_MAX);
-		move = getBestMove(n, 5);
-		printf("Computer 2 move: %d\n", move);
-		drop(gs, move, 2);
-		free(n);
-
-
-		printGameState(gs);
-
-		checkWin(gs);
+		int move;
+		printf("Move? ");
+		scanf("%d", &move);
+	       
+		playerMove(move);
+ 
+		printGameState(globalState);
+ 
+		checkWin(globalState);
+ 
+		computerMove(LOOK_AHEAD);
+ 
+		printGameState(globalState);
+ 
+		checkWin(globalState);
 	}
-
-	free(gs->board);
-	free(gs);
-
+ 
+	freeGameState(globalState);
+ 
 	return 0;
 }
 

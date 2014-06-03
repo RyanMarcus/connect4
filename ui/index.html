@@ -1,0 +1,44 @@
+<html ng-app>
+  <head>
+    <title>conn4.js</title>
+    <script type="text/javascript" src="angular.min.js"></script>
+    <script type="text/javascript" src="conn4ctrl.js"></script>
+    <link rel="stylesheet" href="conn4.css">
+  </head>
+
+
+  <body>
+    <div class="conn4" ng-controller="ConnFourCtrl">
+      <div class="info">
+	<div>Winner: <span ng-hide="winner">none yet...</span><span ng-show="winner">Player {{winner}}</span></div>
+	<div>Draw: <span ng-hide="draw">no</span><span ng-show="draw">yes</span></div>
+      </div>
+      <div class="thinking">
+	<img src="ajax-loader.gif" ng-show="thinking" />
+      </div>
+      <table border="1" class="c4table">
+	<tbody>
+	  <tr ng-repeat="row in board">
+	    <td ng-repeat="col in row track by $index" ng-class="col">
+	      &nbsp;
+	    </td>
+	  </tr>
+
+	  <tr>
+	    <td ng-repeat="col in board[0] track by $index" align="center"><button href="#" ng-click="move($index)" ng-disabled="winner || thinking">Move</button></td>
+	  </tr>
+	</tbody>
+      </table>
+
+
+      <div class="ai">
+	<form class="form-horizontal" role="form">
+	  <label for="movesAhead">Moves to to think ahead</label>
+	  <input type="integer" class="movesAhead" id="movesAhead" ng-model="look_ahead" />
+	</form>
+      </div>
+      
+    </div>
+  </body>
+
+</html>
