@@ -1,5 +1,5 @@
 .conn4 {
-    width: 465px;
+    width: 240px;
 }
 
 .conn4 .c4table {
@@ -7,12 +7,18 @@
     width: 100%;
 }
 
-.conn4 .c4table .player1 {
+.conn4 .player1 {
     background-color: #FF0000;
+    fill: #FF0000;
 }
 
-.conn4 .c4table .player2 {
+.conn4 .player2 {
     background-color: #000000;
+    fill: #000000;
+}
+
+.conn4 .empty {
+    fill: #FFFFFF;
 }
 
 
@@ -27,4 +33,19 @@
     margin: 10px;
 }
 
+.conn4 .hlc {
+    -webkit-animation-name: hanim;
+    -webkit-animation-duration: 0.75s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-direction: alternate;
+    -webkit-animation-play-state: running;
+    stroke: black;
+    stroke-width: 1px;
+}
+
+
+@-webkit-keyframes hanim {
+    0% { stroke-width: 1px; stroke: black; }
+    100% { stroke-width: 3px; stroke: yellow; }
+}
 

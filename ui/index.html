@@ -16,19 +16,14 @@
       <div class="thinking">
 	<img src="ajax-loader.gif" ng-show="thinking" />
       </div>
-      <table border="1" class="c4table">
-	<tbody>
-	  <tr ng-repeat="row in board">
-	    <td ng-repeat="col in row track by $index" ng-class="col">
-	      &nbsp;
-	    </td>
-	  </tr>
 
-	  <tr>
-	    <td ng-repeat="col in board[0] track by $index" align="center"><button href="#" ng-click="move($index)" ng-disabled="winner || thinking">Move</button></td>
-	  </tr>
-	</tbody>
-      </table>
+      <svg width="240" height="180">
+	<rect width="100%" height="100%" style="fill: yellow;" />
+	<g ng-repeat="row in board" transform="translate(30, {{ ($index + 1) * 25 }})">
+	  <circle ng-repeat="col in row track by $index" cx="{{ $index * 30 }}" cy="0" r="11" class="hlc" ng-show="isOver[$index]" />
+	  <circle ng-repeat="col in row track by $index" cx="{{ $index * 30 }}" cy="0" r="10" stroke="black" ng-class="col" ng-click="move($index)" ng-mouseover="over($index)" ng-mouseleave="leave($index)"/>
+	</g>
+      </svg>
 
 
       <div class="ai">

@@ -8,7 +8,7 @@ function ConnFourCtrl($scope) {
 	$scope.winner = false;
 	$scope.draw = false;
 	$scope.thinking = false;
-
+	$scope.isOver = {};
 
 	$scope.move = function(i) {
 		$scope.thinking = true;
@@ -24,10 +24,19 @@ function ConnFourCtrl($scope) {
 	$scope.worker.addEventListener('message', function(data) {
 		var m = data.data;
 		$scope.board = m['board'];
+
 		$scope.winner = m['win'];
 		$scope.draw = m['draw'];
 		$scope.thinking = m['thinking'];
 		$scope.$apply();
 	});
+
+	$scope.over = function(idx) {
+		$scope.isOver[idx] = true;
+	};
+
+	$scope.leave = function(idx) {
+		$scope.isOver[idx] = false;
+	};
 
 }
