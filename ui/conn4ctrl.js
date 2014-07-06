@@ -11,8 +11,10 @@ function ConnFourCtrl($scope) {
 	$scope.isOver = {};
 
 	$scope.move = function(i) {
+		if ($scope.winner)
+			return;
 		$scope.thinking = true;
-		$scope.worker.postMessage({'cmd': 'move', 'val': i});		
+		$scope.worker.postMessage({'cmd': 'move', 'val': i});	
 	};
 
 
