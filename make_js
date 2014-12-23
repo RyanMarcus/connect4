@@ -1,1 +1,0 @@
-~/Downloads/emsdk_portable/emscripten/1.16.0/emcc -Wall -O3 -s TOTAL_MEMORY=67108864 -s EXPORTED_FUNCTIONS="['_startNewGame', '_playerMove', '_computerMove', '_isGameWon', '_isGameDraw', '_isEmpty', '_pieceAt']" conn4.c -o conn4.js
