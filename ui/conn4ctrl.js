@@ -11,6 +11,9 @@ function ConnFourCtrl($scope) {
 	$scope.isOver = {};
 
 	$scope.move = function(i) {
+		if ($scope.thinking)
+			return;
+
 		if ($scope.winner)
 			return;
 		$scope.thinking = true;
