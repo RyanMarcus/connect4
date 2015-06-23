@@ -306,7 +306,7 @@ def human_move(g):
     check_win(g)
     return g
 
-def computer_move(g, player="c", other="h", moves=5):
+def computer_move(g, player="c", other="h", moves=10):
     gtn = GameTreeNode(g, player, other, True, float("-inf"), float("inf"), dict(), True)
     gtn = gtn.get_best_child(max_moves=moves)
     g = gtn.state
@@ -330,9 +330,9 @@ def hvc():
 def cvc():
     g = GameState(7, 6)
     while True:
-        g = computer_move(g, player="1", other="2", moves=5)
+        g = computer_move(g, player="1", other="2", moves=10)
         print(g)
-        g = computer_move(g, player="2", other="1", moves=5)
+        g = computer_move(g, player="2", other="1", moves=10)
         print(g)
 
 hvc()
