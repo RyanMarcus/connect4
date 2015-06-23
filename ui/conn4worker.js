@@ -34,9 +34,9 @@ var movesAhead = 5;
 
 function sendBoardUpdate(thinking) {
 	var board = [];
-	for (var y = 0; y < 6; y++) {
+	for (var y = 0; y < 8; y++) {
 		var toAdd = [];
-		for (var x = 0; x < 7; x++) {
+		for (var x = 0; x < 8; x++) {
 			if (isEmpty(x, y)) {
 				toAdd.push("empty");
 			} else {
