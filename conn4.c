@@ -549,7 +549,7 @@ int bestMoveForState(GameState* gs, int player, int other_player, int look_ahead
 GameState* globalState;
 
 void startNewGame() {
-	globalState = newGameState(7, 6);
+	globalState = newGameState(8, 8);
 }
 
 void playerMove(int move) {
