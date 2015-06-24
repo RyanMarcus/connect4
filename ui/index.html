@@ -44,7 +44,7 @@
 	<img src="ajax-loader.gif" ng-show="thinking" />
       </div>
 
-      <svg width="240" height="180">
+      <svg width="270" height="220">
 	<rect width="100%" height="100%" style="fill: yellow;" />
 	<g ng-repeat="row in board" transform="translate(30, {{ ($index + 1) * 25 }})">
 	  <circle ng-repeat="col in row track by $index" cx="{{ $index * 30 }}" cy="0" r="11" class="hlc" ng-show="isOver[$index]" />
