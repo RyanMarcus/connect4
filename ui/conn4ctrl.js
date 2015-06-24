@@ -39,6 +39,7 @@ function ConnFourCtrl($scope) {
 
 		if ($scope.winner)
 			return;
+
 		$scope.thinking = true;
 		$scope.worker.postMessage({'cmd': 'move', 'val': i});	
 	};
