@@ -549,13 +549,10 @@ int bestMoveForState(GameState* gs, int player, int other_player, int look_ahead
 GameState* globalState = NULL;
 
 void startNewGame() {
-	printf("C STARTING NEW GAME\n\n\n");
 	globalState = newGameState(8, 8);
-	printf("New game started!\n");
 }
 
 void playerMove(int move) {
-	printf("C PLAYER MOVE\n");
 	drop(globalState, move, 1);
 }
 
@@ -573,7 +570,6 @@ int isGameDraw() {
 }
 
 int isEmpty(int x, int y) {
-	printf("!!!\n");
 	return at(globalState, x, y) == EMPTY;
 }
 

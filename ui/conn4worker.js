@@ -54,6 +54,8 @@ function sendBoardUpdate(thinking) {
 
 }
 
+
+
 self.addEventListener('message', function(data) {
 	var m = data.data;
 	if (m['cmd'] == "new") {
