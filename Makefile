@@ -21,6 +21,9 @@
 ui/conn4.js: conn4.c
 	emcc -Wall -O3 -s TOTAL_MEMORY=67108864 -s EXPORTED_FUNCTIONS="['_startNewGame', '_playerMove', '_computerMove', '_isGameWon', '_isGameDraw', '_isEmpty', '_pieceAt']" conn4.c -o ui/conn4.js
 
+conn4: conn4.c
+	gcc -Wall -O3 conn4.c -o conn4
+
 .phony: clean
 
 clean:
